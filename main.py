@@ -20,6 +20,7 @@ class Doctor (Base):
     id = Column(Integer(), primary_key=True)
     name = Column(String(), nullable=False)
     specialization = Column(String(), nullable=False)
+    email = Column(String())
 
     def __repr__(self):
         return f"Doctor name: {self.name}, Specialization: {self.specialization}"

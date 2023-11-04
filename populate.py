@@ -1,15 +1,20 @@
-from main import Doctor, Patient, Nurse, Session, Ward
+from main import Doctor, Patient, Nurse, Session, Ward, connector_table, engine
 import datetime 
 import click
+import re
+
+
+
 
 @click.command()
 @click.option('--name', prompt = 'Name', help ='Name of the doctor')
 @click.option('--specialization', prompt = 'specialization', help = 'Doctor Specialization')
+@click.option('--email', prompt = 'Email', help = 'Enter the email of the doctor')
 
-def add_to_doctors(name, specialization):
+def add_to_doctors(name, specialization, email):
     sess = Session()
 
-    new_entry = Doctor(name = name, specialization = specialization)
+    new_entry = Doctor(name = name, specialization = specialization, email= verify_email(email))
     sess.add(new_entry)
     
 
@@ -19,10 +24,11 @@ def add_to_doctors(name, specialization):
     sess.close()
 
 
+NURSES_SHIFTS = ['Day', 'NIght']
 
 @click.command()
 @click.option('--name', prompt = 'Name', help = 'Name of the nurse')
-@click.option('--shift', prompt = 'Shift', help = 'Nurse shift')
+@click.option('--shift', prompt = 'Shift', type=click.Choice(NURSES_SHIFTS), help = 'Nurse shift')
 
 def add_to_nurses(name, shift):
     
@@ -45,36 +51,70 @@ def format_date():
 
 @click.command()
 @click.option('--name', prompt = 'Name')
-@click.option('--disease', prompt = 'Disease')
 @click.option('--assigned_doctor', prompt = 'Assigned Doctor')
 @click.option('--arrival_time')
+@click.option('--ward', prompt ='Ward')
 
-def add_data_to_patients(name, arrival_time, disease, assigned_doctor):
+def add_to_patients(name, arrival_time, assigned_doctor, ward):
     sess = Session()
 
-    new_entry = Patient(name = name, arrival_time = format_date(), disease = disease, assigned_doctor = assigned_doctor)
+    new_entry = Patient(name = name, arrival_time = format_date(), assigned_doctor = assigned_doctor, ward = ward)
     sess.add(new_entry)
 
-    click.echo(f'Data added: Name: {name}, Disease: {disease}, Assigned Doctor: {assigned_doctor}')
+    click.echo(f'Data added: Name: {name}, Assigned Doctor: {assigned_doctor}, Ward: {ward}')
 
     sess.commit()
     sess.close()
 
 @click.command()
-@click.option('--patient_id', prompt = 'Patient_id')
-@click.option('--doctor_id', prompt = 'Doctor_id')
-@click.option('--nurse_id', prompt = 'Nurse_id')
+@click.option('--name', prompt = 'Name')
 
-def add_data_to_wards(patient_id, doctor_id, nurse_id):
+def add_to_wards(name):
     sess = Session()
 
-    new_entry = Ward(patient_id = patient_id, doctor_id=doctor_id, nurse_id = nurse_id)
+    new_entry = Ward(name = name)
     sess.add(new_entry)
 
-    click.echo(f'Patient_id: {patient_id}, Doctor_id: {doctor_id}, Nurse_id: {nurse_id}')
+    click.echo(f'Name: {name}')
 
     sess.commit()
     sess.close()
+
+@click.command()
+@click.option('--patient_id', prompt = 'Patient_id', help='Enter the patient id')
+@click.option('--ward_id', prompt = 'Ward_id', help = 'Enter the ward where the patient is located')
+
+def add_to_location(patient_id, ward_id):
+    sess = Session()
+    new_entry = connector_table.insert().values(patient_id=patient_id,ward_id=ward_id)
+    
+    conn = engine.connect()
+    conn.execute(new_entry)
+
+    click.echo('Added')
+
+    sess.commit()
+    sess.close()
+
+#DELETING DATA FROM TABLE doctors
+
+@click.command()
+def delete_doctor():
+    sess = Session()
+
+    query = sess.query(Doctor).filter(Doctor.id == 2).first()
+    
+    if query:
+        sess.delete(query)
+        sess.commit()
+        click.echo('Doctor deleted')
+
+    else:
+        click.echo('Doctor not found')
+
+#Deleting an entire table
+
+
 
 @click.group()
 
@@ -82,10 +122,12 @@ def cli():
     pass
     
 
-cli.add_command(add_data_to_doctors)
-cli.add_command(add_data_to_nurses)
-cli.add_command(add_data_to_patients)
-cli.add_command(add_data_to_wards)
+cli.add_command(add_to_doctors)
+cli.add_command(add_to_nurses)
+cli.add_command(add_to_patients)
+cli.add_command(add_to_wards)
+cli.add_command(delete_doctor)
+cli.add_command(add_to_location)
 
 if __name__ == '__main__':
     cli()
