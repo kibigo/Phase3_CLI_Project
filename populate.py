@@ -4,7 +4,12 @@ import click
 import re
 
 
-
+def verify_email(email):
+    pattern = "^[a-z A-Z 0-9]+@[a-z A-Z]+\.[a-z A-Z]{2,3}$"
+    if re.search(pattern, email):
+        return email
+    else:
+        print("Email is not valid")
 
 @click.command()
 @click.option('--name', prompt = 'Name', help ='Name of the doctor')
