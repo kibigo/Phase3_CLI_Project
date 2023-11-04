@@ -1,4 +1,4 @@
-from main import Doctor, Patient, Nurse, Session, Ward, connector_table, engine
+from main import Doctor, Patient, Nurse, Session, Ward, engine
 import datetime 
 import click
 import re
@@ -85,21 +85,6 @@ def add_to_wards(name):
     sess.commit()
     sess.close()
 
-@click.command()
-@click.option('--patient_id', prompt = 'Patient_id', help='Enter the patient id')
-@click.option('--ward_id', prompt = 'Ward_id', help = 'Enter the ward where the patient is located')
-
-def add_to_location(patient_id, ward_id):
-    sess = Session()
-    new_entry = connector_table.insert().values(patient_id=patient_id,ward_id=ward_id)
-    
-    conn = engine.connect()
-    conn.execute(new_entry)
-
-    click.echo('Added')
-
-    sess.commit()
-    sess.close()
 
 #DELETING DATA FROM TABLE doctors
 
@@ -117,7 +102,6 @@ def delete_doctor():
     else:
         click.echo('Doctor not found')
 
-#Deleting an entire table
 
 
 
@@ -132,7 +116,7 @@ cli.add_command(add_to_nurses)
 cli.add_command(add_to_patients)
 cli.add_command(add_to_wards)
 cli.add_command(delete_doctor)
-cli.add_command(add_to_location)
+
 
 if __name__ == '__main__':
     cli()

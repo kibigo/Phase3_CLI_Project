@@ -6,13 +6,6 @@ Base = declarative_base()
 
 engine = create_engine('sqlite:///hospital.db', echo=True)
 
-connector_table = Table(
-    'location_table',
-    Base.metadata,
-    Column('patient_id', ForeignKey('patients.id')),
-    Column('ward_id', ForeignKey('wards.id'))
-)
-
 
 class Doctor (Base):
     __tablename__ = 'doctors'
