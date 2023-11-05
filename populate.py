@@ -2,7 +2,6 @@ from main import Doctor, Patient, Nurse, Session, Ward, engine
 import datetime 
 import click
 import re
-from sqlalchemy import inspect
 
 
 def verify_email(email):
@@ -119,7 +118,41 @@ def view_data(table):
             click.echo(f'No data found in {table}')
 
         
+#UPDATING DATA IN A TABLE
+@click.command()
+@click.option('--table', prompt = 'Table Name', help='Enter the name of the table to update data')
+@click.option('--id', prompt = 'Data ID', type=int, help='ID of the data to update')
+@click.option('--name', prompt = 'New Name', help='Enter the new name to be saved')
 
+def update(table, id, name):
+    sess = Session()
+
+    table_mapping = {
+        'doctors': Doctor,
+        'nurses': Nurse,
+        'patients':Patient,
+        'wards': Ward
+    }
+
+    if table not in table_mapping:
+        click.echo(f'Table {table} not found')
+
+    else:
+        target_table = table_mapping[table]
+
+        query = sess.query(target_table).filter(target_table.id == id).first()
+        
+        if query:
+            query.name = name
+            
+            sess.commit()
+
+            click.echo(f'Data in {table} with ID {id} updated')
+
+        else:
+            click.echo(f'Data in {table} with ID {id} not found')
+    
+    sess.close()
 
 
 #DELETING DATA FROM TABLE doctors
@@ -169,7 +202,7 @@ cli.add_command(add_to_patients)
 cli.add_command(add_to_wards)
 cli.add_command(delete)
 cli.add_command(view_data)
-
+cli.add_command(update)
 
 if __name__ == '__main__':
     cli()
