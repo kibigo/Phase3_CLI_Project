@@ -2,6 +2,7 @@ from main import Doctor, Patient, Nurse, Session, Ward, engine
 import datetime 
 import click
 import re
+from sqlalchemy import inspect
 
 
 def verify_email(email):
@@ -85,22 +86,73 @@ def add_to_wards(name):
     sess.commit()
     sess.close()
 
+#VIEWING DATA ADDED IN TABLES
+@click.command()
+@click.option('--table', prompt = 'Table Name', help='Name of the table to view data')
+
+
+def view_data(table):
+    sess = Session()
+
+    table_mapping = {
+        'doctors': Doctor,
+        'nurses': Nurse,
+        'patients':Patient,
+        'wards': Ward
+    }
+
+    if table not in table_mapping:
+        click.echo(f'Table {table} not found')
+
+    else:
+        target_table = table_mapping[table]
+
+        query = sess.query(target_table).all()
+
+        if query:
+            click.echo(f'Data in Table {table}')
+
+            for item in query:
+                click.echo(item)
+
+        else:
+            click.echo(f'No data found in {table}')
+
+        
+
+
 
 #DELETING DATA FROM TABLE doctors
 
 @click.command()
-def delete_doctor():
-    sess = Session()
+@click.option('--table', prompt ='Table Name', help='Name of the table to delete data from')
+@click.option('--id', prompt='Data ID', type= int, help='ID of the data to delete')
 
-    query = sess.query(Doctor).filter(Doctor.id == 2).first()
+def delete(table, id):
+    sess = Session()
     
-    if query:
-        sess.delete(query)
-        sess.commit()
-        click.echo('Doctor deleted')
+    table_mapping = {
+        'doctors': Doctor,
+        'nurses': Nurse,
+        'patients':Patient,
+        'wards': Ward
+        }
+
+    if table not in table_mapping:
+        click.echo(f'Table {table} not found')
 
     else:
-        click.echo('Doctor not found')
+        target_table = table_mapping[table]
+
+        query = sess.query(target_table).filter(target_table.id == id).first()
+    
+        if query:
+            sess.delete(query)
+            sess.commit()
+            click.echo(f'Data in {table} with ID {id} deleted')
+
+        else:
+            click.echo(f'Data in {table} with ID {id} not found')
 
 
 
@@ -115,7 +167,8 @@ cli.add_command(add_to_doctors)
 cli.add_command(add_to_nurses)
 cli.add_command(add_to_patients)
 cli.add_command(add_to_wards)
-cli.add_command(delete_doctor)
+cli.add_command(delete)
+cli.add_command(view_data)
 
 
 if __name__ == '__main__':
